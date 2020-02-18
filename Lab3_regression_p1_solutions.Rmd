@@ -1,0 +1,175 @@
+---
+title: 'Simple Linear Regression: First Year College GPA'
+author: "Solutions"
+date: ""
+output: pdf_document
+---
+
+## Predicting Success in College
+
+During the college admissions process, many factors are considered to assess whether an applicant will be successful in college. Specifically, these factors are assumed to be good determinants of how an applicant will perform in the first year of college (assessed by GPA). Common metrics used to predict first year GPA include high school GPA and SAT score. In small groups, you will explore the relationships between first year GPA (units: first year GPA points) and high school GPA (units: high school GPA points), and first year GPA and SAT score (units: SAT points). The data set you will be using is available through the openintro library. 
+
+```{r setup, tidy=TRUE}
+## load packages
+library(ggplot2)
+library(openintro)
+
+### The name of the dataset you need is satGPA. This will load with openintro.
+head(satGPA)
+
+```
+
+### Model the relationship between first year college GPA and high school GPA.
+
+#### Make an appropriate graph to look at the relationship between your two variables. Identify the response variable and the predictor. Verbally describe the relationship between the two variables.
+
+```{r scatterplot, tidy=TRUE}
+ggplot(data=satGPA, aes(x=HSGPA, y=FYGPA)) + geom_point()
+```
+
+There appears to be a moderate linear relationship between high school GPA and first year GPA. There is also a potential outlier - a high school GPA of 4.5 was reported, but seems unlikely. This could be a data entry error. If possible, you would want to check with the person who collected the data to see if this is legitimate. 
+
+#### Find the correlation between the response and the predictor. Is is positive or negative?
+
+```{r correlation, tidy=TRUE}
+R <- cor(satGPA$HSGPA, satGPA$FYGPA)
+R
+```
+
+The correlation is positive.
+
+#### Calculate the five summary statistics necessary to estimate $\beta_0$ and $\beta_1$. Save them as `x_bar`, `y_bar`, `s_x`, `s_y`, and `R`.
+
+```{r summ stat, tidy=TRUE}
+x_bar <- mean(satGPA$HSGPA)
+y_bar <- mean(satGPA$FYGPA)
+s_x <- sd(satGPA$HSGPA)
+s_y <- sd(satGPA$FYGPA)
+## already found R above, so I am not going to repeat that code
+
+```
+
+#### Then calculate these estimates (i.e. $\hat{\beta}_0$ and $\hat{\beta}_1$). Save them as `b0` and `b1`, respectively. What are the units for each of these estimates (see problem description)?
+
+```{r}
+b1 <- s_y/s_x*R
+b0 <- y_bar-b1*x_bar
+
+b1
+b0
+```
+
+$\hat{\beta}_0=$ `r round(b0, 3)` first year GPA points
+
+$\hat{\beta}_1=$ `r round(b1, 3)` first year GPA points/high school GPA point
+
+#### Fit the linear model for your problem. Be sure to identify the response and predictor correctly. Be sure to assign this a descriptive name (e.g. `lm_FYGPA_HSGPA`).
+
+```{r}
+lm_FYGPA_HSGPA <- lm(data=satGPA, FYGPA ~ HSGPA)
+```
+
+
+#### Use the summary function to look at a summary of your model fit. Compare the estimates of $\beta_0$ and $\beta_1$ that you get from this summary to those that you calculated in (c).
+
+```{r}
+summary(lm_FYGPA_HSGPA)
+```
+
+#### Interpret your estimates of intercept and slope in the context of the problem. Be sure to consider units.
+
+Intercept: For a high school GPA of 0, we predict a first year college GPA of 0.091 (first year GPA) points.
+
+Slope: For a 1 point increase in high school GPA, we predict an increase in first year GPA of 0.743 points.
+
+#### Is it appropriate to interpret the intercept in this case? Why or why not? What about the slope?
+
+It is not appropriate to interpret the intercept, because we do not have any high school GPAs that are 0. Interpretting the intercept in this particular example would be extrapolation and should be avoided.
+
+It is appropriate to interpret the slope. In general, interpretting this is going to be fine.
+
+#### Is the linearity condition for least squares regression satisfied? To make a residual plot, you will need the following data frame (this will run after you have completed the previous steps of this lab). When you are ready, you can uncomment the relevant lines.
+
+Reminder: the basic anatomy of a plot made in ggplot is as follows: 
+
+```{}
+## Skeleton code - should not run anything
+(ggplot(data=<name of data frame>, 
+        aes(x=<variable for x axis>, y=<variable for y axis>,
+            color = <variable for color lines>, 
+            fill= <variable for color area>))
+        + geom_<geometry type>()
+        + <optional other things like axis labels, ...>)
+```
+
+```{r residual plot, tidy=TRUE}
+## Make data frame for residual plot
+## Uncomment the following two lines when you are ready to do this part.
+
+resid_df_m1 <- data.frame(x=satGPA$HSGPA,
+                          y=lm_FYGPA_HSGPA$residuals)
+
+## Use ggplot to make residual plot
+ggplot(data=resid_df_m1, aes(x=x, y=y)) + geom_point() + geom_hline(yintercept = 0)
+```
+
+#### What is the $R^2$ for your model? Interpret this value in the context of the problem.
+
+Based on the summary output, we can see that $R^2=0.295$. This means that `29.5%` of the variability in FYGPA can be explained by high school GPA. 
+
+### Model the relationship between first year college GPA and SAT score (SATSum).
+
+Repeat the steps you took in the previous section, this time using SAT score as the predictor.
+
+Solutions would be similar, so I am not including them.
+
+### Model the relationship between first year college GPA and sex. 
+
+Repeat the steps you took in the previous section, this time using sex as the predictor. You will need to do one additional step before you start:
+
+```{r}
+satGPA$sex <- as.factor(satGPA$sex)
+```
+
+#### Make a side-by-side boxplot to show the relationship between FYGPA and sex.
+
+```{r fig.align='center'}
+## boxplot
+ggplot(data=satGPA, aes(x=sex, y=FYGPA)) + geom_boxplot()
+```
+
+#### Write doen the (generic) equation for the linear model. Define what x and y are in the equation.
+
+$$\hat{y}=\hat{\beta}_0+\hat{\beta}_1x$$, where y=FYGPA and x=indicator variable for x (meaning it will be 0 if sex=1 (male) and 1 if sex=2 (female)). You wouldn't necessarily know this last part before you run the model.
+
+#### What values can x take on here? 
+
+In a model with a categorical predictor with two levels, x will take on 0 and 1, only.
+
+#### Fit a linear model that uses sex to predict FYGPA; assign this linear model to `lm_FYGPA_sex`.
+
+```{r}
+lm_FYGPA_sex <- lm(data=satGPA, FYGPA~sex)
+```
+
+#### Use the summary function on your linear model to print out the model summary details.
+
+```{r}
+summary(lm_FYGPA_sex)
+```
+
+#### What is the estimate $\hat{\beta}_0$? What does this mean?
+
+$\hat{\beta}_0=$ 2.396 FY GPA points. On average, we expect a FYGPA of 2.396 for males.
+
+#### What is the estimate for $\hat{\beta}_1$? What does this mean?
+
+$\hat{\beta}_1=$ 0.149. This is the expected change in GPA as we move from males to females. In other words, on average, we expect FYGPA for females to be 0.149 points higher for females than for males, based on this model.
+
+#### What is the $R^2$? Interpret this value in the context of the problem.
+
+Looking at the summary function output, $R^2=0.01$. This means that about 1 percent of the variability in FYGPA can be explained by sex.
+
+#### Here we have a categorical predictor with two levels (male or female). Is the linearity assumption satisfied? Why or why not?
+
+Linearity is always satisfied for a linear model with a categorical predictor with two levels.
